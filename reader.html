@@ -1,0 +1,184 @@
+<div ng-init="view = 'contents'" id="reader-menu" ng-class="menuToggle == 1 ? 'opened' : 'closed'">
+	<div ng-class="view == 'related' ? 'justify-start' : ''" id="reader-menu-inner">
+		<div class="menu-top-buttons">
+			<button id="content-menu-content-button" ng-click="view = 'contents'" ng-class="view == 'contents' ? 'active' : ''">Contents</button>
+			<button ng-click="view = 'related'" ng-class="view == 'related' ? 'active' : ''">About</button>
+			<button ng-click="toggleMenu($event)" class="x-out">X</button>
+		</div>
+		<div ng-if="view == 'contents'" class="menu-view fade">
+			<div id="reader-menu-contents">
+				<div id="reader-menu-contents-list">
+					<div id="reader-menu-contents-wrapper">
+						<button on-finish-render="ngRepeatFinished" ng-click="navigate({{ $index }}, $evt)" ng-class="$index == chIndex ? 'active' : ''" ng-repeat="chapterTitle in chapterTitles">{{ $index + 1 }}. {{ chapterTitle }}</button>
+						
+					</div>
+				</div>
+	
+			</div>
+			<div id="reader-menu-contextual">
+				<div id="overflow-arrow">&lt;</div>
+				<a ng-if="PDFUrl != ''" class="reader-link pdf-icon" id="context-menu-pdf" ng-href="{{ PDFUrl }}" href="">PDF</a>
+			</div>
+		</div>
+		<div ng-if="view == 'related'" class="menu-view fade" id="menu-view-related">
+            <div ng-if="readerTopics.length > 0 ">
+                <h3>{{ readerTopics.length == 1 ? 'Topic' : 'Topics' }}</h3>
+                <ul>
+                	<li ng-repeat="topic in readerTopics"><a ng-href="/{{ topic.url }}">{{ topic.name }}</a></li>
+            	</ul>
+            </div>
+            <div ng-if="readerInitiatives.length > 0 ">
+                <h3>{{ readerInitiatives.length == 1 ? 'Initiative' : 'Initiatives' }}</h3>
+                <ul>
+                	<li ng-repeat="initiative in readerInitiatives"><a ng-href="/{{ initiative.url }}">{{ initiative.title }}</a></li>
+            	</ul>
+            </div>
+            <div ng-if="readerWorkingGroups.length > 0 ">
+                <h3>{{ readerWorkingGroups.length == 1 ? 'Working Group' : 'Working Groups' }}</h3>
+                <ul>
+                <li ng-repeat="workingGroup in readerWorkingGroups"><a ng-href="/{{ workingGroup.url }}">{{ workingGroup.title }}</a></li>
+            </ul>
+            </div>
+            <div>
+	            <h3>Citation</h3>
+                <p ng-bind-html="citation"></p><p><a ng-href="{{ canonical }}">{{ canonical }}</a></p>
+            </div>
+			<div ng-if="funding">
+	            <h3>Acknowledgments</h3>
+	            <p>{{ funding }}</p>
+           </div>
+		</div>
+	</div>
+</div>
+		<button ng-click="navigate('previous')" ng-class="chIndex > 0 ? 'fade nav-button nav-button-left' : 'fade nav-button nav-button-left nav-button-hidden'"><div></div></button>
+		<button ng-init="setNavButtonWatcher()" ng-click="navigate('next')" ng-class="chIndex < chapters.length - 1 ? 'fade nav-button nav-button-right' : 'ade nav-button nav-button-right nav-button-hidden'"><div></div></button>
+			<button ng-init="setMenuButtonWatcher()" id="menu-button" ng-class="menuToggle == 1 ? 'opened' : ''" ng-click="toggleMenu($event)">GO TO</button>
+<div id="error-announce" ng-if="JSONError">
+	<div>
+		<p>There was a problem loading the publication. Please try reloading the page. If the problem continues, please <a href="/page/contact-cgd">contact us</a> and let us know. Error: Reader Module JSON data, "{{ errorResponse }}".</p>
+	</div>
+</div>
+<div id="main-container" ng-swipe-disable-mouse ng-swipe-left="navigate('next')" ng-swipe-right="navigate('previous')" ng-class="firstLoad === true || chIndex === 0 ? '' : 'subsequent-page'">
+	<div class="subpage-top-section">        
+		<div id="subpage-top-inner">
+
+			<div ng-if="type" class="field-name-field-document-type">{{ type }}</div>
+			<h1 id="pub-title">{{ title }}<span class="hide-subsequent">: {{ subtitle }}</span></h1>
+			<div id ="share-top" class="share-buttons">
+				<a class="tweet thin-dotted-focus" ng-href="{{ tweetIntent }}" href="https://twitter.com/intent/tweet">
+				</a> 
+				<a class="facebook thin-dotted-focus" ng-href="{{ facebookSharer }}" href="https://www.facebook.com/sharer/sharer.php">
+				</a> 
+				<a class="linked-in thin-dotted-focus" ng-href="{{ linkedInSharer }}" href="https://www.linkedin.com/shareArticle">
+				</a>
+			</div>
+			<p class="no-margin hide-subsequent" ng-bind-html="authors"></p> 
+			<p class="hide-subsequent pub-date">{{ date }}</p>
+			<a ng-if="showPDF == 1 && PDFUrl !=''" class="reader-link light-teal-focus pdf-icon" ng-href="{{ PDFUrl }}" target="_blank" title="Download PDF">Download PDF</a>
+			<a ng-repeat="link in optionalLinks" ng-class="link.type !== '' ? 'reader-link light-teal-focus ' + link.type + '-icon' : 'reader-link light-teal-focus no-icon' " ng-href="{{ link.url }}" href="">{{ link.title }}</a>          
+		</div>
+	</div>
+	<div class="subpage-bottom-section">
+		<div id="subpage-bottom-inner">
+			<p id="main-content" tabindex="-1" class="benchnine">Chapter {{ chIndex + 1 }} of {{ chapters.length }} | <span id="chapter-indicator"><button class="stripped-button benchnine" ng-click="toggleMenu($event)">Table of Contents</button></span></p>
+
+			<div ng-animate-swap="chIndex" class="fade" id="content-wrapper">
+				<div ng-if="chIndex == 'showAllChapters'">
+					<div class="summary">
+						<p class="h2">Summary</p>
+						<p ng-bind-html="printSummary"></p>
+						<div class="box">
+							<p ng-bind-html="funding"></p>
+							<p ng-bind-html="citation"></p>
+						</div>
+					</div>
+					<div id="print-contents">
+						<h2>Contents</h2>
+					    <ol class="leaders">
+							<li ng-repeat="chapterTitle in chapterTitles">
+								<span>{{ chapterTitle }}</span><span>00</span>
+							</li>
+						</ol>
+					</div>
+				</div>
+				<chapter>
+					<h2>{{ chapterTitles[chIndex] }}</h2>
+					<div id="chapter-image-wrapper" class="relative" ng-if="chapterImages[chIndex] && chapterImages[chIndex].alt != 'no-image-image'">
+						<img class="fade" ng-src="{{ chapterImages[chIndex].url }}" title="{{chapterImages[chIndex].title}}" alt="{{chapterImages[chIndex].alt}}" />
+						<p ng-if="chapterImages[chIndex].title">{{ chapterImages[chIndex].title }}</p>
+					</div>
+					<p ng-if="captions[chIndex] && captions[chIndex] !== 'none'" id="chapter-caption">{{ captions[chIndex] }}</p>
+					<div id="current-chapter" ng-bind-html="currentChapterHTML" class="region-postscript-content">
+
+					</div> 	
+				</chapter>
+				<h3>Authors</h3>
+				<div id="author-thumbnails" class="flex-container justify-start">
+					
+					<div ng-if="each.link" class="author-thumb flex-container justify-start" ng-repeat="each in authorThumbnails">
+						<a ng-href="{{ each.link }}">
+							<img ng-src="{{ each.image ? each.image : '/sites/default/files/styles/thumbnail/public/default_images/yammer_0.gif' }}" />
+						</a>						
+						<div class="author-thumb-name">
+							<a ng-href="{{ each.link }}">
+								<h3>{{ each.name }}</h3>
+							</a>
+							<div ng-if="each.link" class="blog-author-view-profile">
+								<a ng-href="{{ each.link }}">View Profile</a>
+							</div>
+						</div>
+					</div> 
+
+					<div ng-if="!each.link" class="author-thumb flex-container justify-start" ng-repeat="each in authorThumbnails">
+						<img ng-src="{{ each.image ? each.image : '/sites/default/files/styles/thumbnail/public/default_images/yammer_0.gif' }}" />						
+						<div class="author-thumb-name">
+							<h3>{{ each.name }}</h3>
+						</div>
+					</div>
+
+
+				</div>
+				<div id="row-related" class="" ng-if="processedRelated">		
+					<h3>Related content</h3>
+					<div class="flex-container space-between">
+						<div ng-repeat="item in processedRelated" class="content-card">
+							<div ng-class="item.firstAuthorAvatar != null ? 'ds-1col node node-{{ item.type }} view-mode-card clearfix authImg' : 'ds-1col node node-{{ item.type }} view-mode-card clearfix'">
+								<div class="field field-name-content-type field-type-ds field-label-hidden type-{{ item.type }}">
+									<div class="field-items">
+										<div class="field-item even">{{ ( item.type == 'document' || item.type == 'multimedia' ) && item.subtype != 'zz-none' ? item.subtype.replace('_',' ') : item.type.replace('_',' ') }}
+										</div>
+									</div>
+								</div>
+								<div class="field-name-title">
+									<a ng-href="/{{ item.url }}">{{ item.title | limitTo : 60 }}{{ item.title.length &gt; 60 ? '...' : '' }}</a>
+								</div>
+								<div class="field field-name-author-avatar-2 field-type-ds field-label-hidden">
+									<div class="field-items">
+										<div class="field-item even">
+											<div class="authImg">
+												<img ng-if="item.firstAuthorAvatar" ng-src="{{ item.firstAuthorAvatar }}" />
+											</div>
+										</div>
+									</div>
+								</div>
+								<div class="field field-name-author-list-pubs field-type-ds field-label-hidden">
+									<div class="field-items">
+										<div ng-bind-html="item.authors" class="field-item even reader-related-authors">
+										</div>
+									</div>
+								</div>
+								<div class="field field-name-field-date">
+									<span class="date-display-single">{{ item.created }}</span>
+								</div>
+							</div>
+						</div>
+					</div><!-- end flex container -->
+				</div> <!-- end ng-of related -->
+			</div>	
+			<div id="image-zoom" ng-if="imageSource" ng-click="returnContent()">
+				<p>Click or tap again to return</p>
+				<img ng-src="{{ imageSource }}" />
+			</div>
+		</div>
+	</div>
+</div>

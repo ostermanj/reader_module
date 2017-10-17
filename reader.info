@@ -1,0 +1,4 @@
+name = Reader
+description = Custom module for Reader versions of CGD publications
+package = Custom
+core = 7.x

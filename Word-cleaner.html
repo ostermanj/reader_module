@@ -1,0 +1,109 @@
+
+<!-- saved from url=(0126)file:///Users/johno/Documents/Work-files/OneDrive%20-%20Center%20for%20Global%20Development-/from-Word-cleaner-with-forms.html -->
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+ 
+<script type="text/javascript">
+submitCode = function(){
+console.log('submitCode');
+var text = document.getElementById('code-input').value;
+
+var chap = document.getElementById('chapter-input').value;
+
+text = text.replace(/&nbsp;/g, ' ');
+text = text.replace(/<(\w+)>\s*\/\/([\w-]+) */g, '<$1 class="$2">');
+text = text.replace(/<p>\s*(\[\[[^\]]+\]\])\s*<\/p>/g, '$1');
+text = text.replace(/\[\[(\w+) +([^\]]+)\]\]/g, '[[$1 class="$2"]]');
+text = text.replace(/\[\[/g, '<');
+text = text.replace(/\]\]/g, '>');
+text = text.replace(/<p>&middot; +(.*?)<\/p>/g,'<li>$1</li>');
+text = text.replace(/<div>(\s+)<br clear="all" *\/>/g, '<div class="footnotes">$1<br clear="all">');
+text = text.replace(/<a name="_Toc\d+"[^>]*>(.*(?=<\/a>))<\/a>/g, '$1');
+text = text.replace(/ style="[^"]*"/g,'');
+text = text.replace(/<(\w+)>\s*<\/\1>/g, ' ');
+text = text.replace(/<(\w+)>\s*<\/\1>/g, ' ');
+text = text.replace(/<(\w+)>\s*<\/\1>/g, ' ');
+text = text.replace(/<(\w+)>\s*<\/\1>/g, ' ');
+text = text.replace(/<(\w+)>\s*<\/\1>/g, ' ');
+text = text.replace(/<(\w+)>\s*<\/\1>/g, ' ');
+text = text.replace(/<(\w+)>\s*<\/\1>/g, ' ');
+text = text.replace(/<(\w+)>\s*<\/\1>/g, ' ');
+text = text.replace(/<(\w+)>\s*<\/\1>/g, ' ');
+text = text.replace(/<(\w+)>\s*<\/\1>/g, ' ');
+document.getElementById('rendered').innerHTML = text;
+rendered = document.getElementById('rendered');
+heads = rendered.querySelectorAll('h2, h3, h4, h5');
+x = heads.length;
+for (i = 0; i < x; i++){
+	text = heads[i].innerHTML;
+	text = text.replace(/<\/?strong>/g, '');
+	heads[i].innerHTML = text;
+}
+tables = document.querySelectorAll('table');
+x = tables.length;
+for (i = 0;i < x; i++){
+	tables[0].innerHTML = tables[0].innerHTML.replace(/<\/?p[^>]*>/g,'');
+}
+
+links = document.querySelectorAll('a');
+x = links.length;
+
+for (i = 0; i < x; i++){
+
+link = links[i];
+link.innerHTML = link.innerHTML.replace(/<\/?sup>/g, '');
+
+ref = link.href.replace(/file:[^#]+/,''); //this is from when files were coming from creatavist and the file://  . . . was not the same as the documnet.URL
+link.href = ref;
+ref = link.href;
+matchString = ref.indexOf(document.URL + '#');
+
+	if (matchString != -1){
+
+		ref = link.href.replace(/file:[^#]+/,'');
+		append = '-' + chap;
+		link.href = ref.concat(append);
+		link.name = link.name.concat(append);
+		console.log(ref);
+		divId = ref.replace('#_','');
+		console.log(divId);	
+		
+		if (divId.indexOf('ref') == -1) {
+			refDiv = document.getElementById(divId);
+			console.log(refDiv);
+			refDiv.id = divId.concat(append);
+		}
+	}
+};
+text = document.getElementById('rendered').innerHTML;
+document.getElementById('code-output').innerHTML = text;
+
+};
+</script>
+<style type="text/css">
+body {
+	background-color: #FFFFE0;
+	width:80%;
+	margin: 30px auto 0 auto;
+}
+textarea {
+	
+	background-color:#fff;
+}
+</style>
+</head>
+<body>
+<h2>(Use only in Chrome) Paste clean HTML from Word below. One chapter at a time.</h2>
+<form onsubmit="return false">
+<textarea type="text" id="code-input" name="original-code" style="width:100%; height:300px;" required=""></textarea>
+<p>Enter chapter (e.g., ackn, exec, 1, 2) <input id="chapter-input" type="text" name="chapter-input" required=""></p>
+<input onclick="submitCode()" type="submit">
+</form>
+<div id="new-code">
+<h2>Copy the code below (this is the entire HTML for the email)</h2>
+<textarea type="text" id="code-output" name="code-output" style="width:100%; height:300px;margin-bottom:50px;">hello world</textarea>
+</div>
+<h2>Preview</h2>
+<div id="rendered">
+</div>
+
+</body></html>

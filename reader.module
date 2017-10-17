@@ -1,0 +1,232 @@
+<?php
+$readerNode = array(); // set ups global variable to hold node object
+
+/**
+ * implements hook_menu
+ */
+
+function reader_menu() {
+
+  //define our empty app menu item with path /reader/.
+  $items['reader'] = array( 
+    'page callback' => 'reader_check_node', // path segments after 'reader' are passed as arguments to the callback function
+    'access callback' => TRUE,
+  );
+  
+  return $items;
+}
+
+function reader_check_node($args){ // makes sure the url is a candidate for the reader app. ie url matches and reader app is
+                                   // enabled for that node
+  $originalPath = drupal_get_normal_path('publication/' . $args);
+  $GLOBALS['readerNode'] = menu_get_object('node', 1, $originalPath);
+  $nd = $GLOBALS['readerNode'];
+  if ( $nd->field_enable_reader_app[$nd->language][0]['value'] === '1' ){      
+    return theme('html__reader');   
+  } else if ( $nd->type === 'document' ) {
+    drupal_goto($originalPath, array(''), 301);
+  } else {
+    return MENU_NOT_FOUND; 
+  }
+}
+
+/**
+ * implements hook_theme
+ */
+function reader_theme($existing, $type, $theme, $path) {
+  //point to our custom UI TPL for the 'app' menu item
+  $theme = array();
+  $theme['html__reader'] = array(
+      'render element' => 'page',
+      'base hook' => 'html',
+      'template' => 'html--reader',
+      'path' => drupal_get_path('module', 'reader') . '/templates',
+    );
+    $theme['page__reader'] = array(
+      'render element' => 'page',
+      'base hook' => 'page',
+      'template' => 'page--reader',
+      'path' => drupal_get_path('module', 'reader') . '/templates',
+    );
+ 
+    return $theme;
+}
+
+function returnSafeValues($eachChapter){
+  return $eachChapter['safe_value'];
+}
+
+/**
+ * implements hook_preprocess_html
+ * @param type $vars
+ */
+function reader_preprocess_html(&$vars) { 
+  //if we're serving the app page, add some extra app variables for the tpl to use
+
+
+  $item = menu_get_item();
+  if ($item['path'] == 'reader') {
+    $nd = $GLOBALS['readerNode'];
+    $vars['reader_nid'] = $nd->nid;
+    $vars['reader_full_title'] = json_encode($nd->title);
+    $titleArray = explode(': ', $nd->title);
+    $vars['reader_title'] = $titleArray[0];
+    $vars['reader_title_esc'] = json_encode($titleArray[0]);
+    $vars['reader_subtitle'] = json_encode($titleArray[1]);
+    $vars['reader_topic'] = json_encode(reader_get_tid_info(reader_create_entity_array($nd->field_topic[$nd->language])));
+    $vars['reader_path'] = url(drupal_get_path('module', 'reader'));
+    $vars['reader_relate'] = json_encode(reader_get_nid_info(reader_create_entity_array($nd->field_relate[$nd->language]),'relate'));
+    $vars['reader_impacts'] = json_encode(reader_get_nid_info(reader_create_entity_array($nd->field_impacts_and_influence[$nd->language]),'impacts'));
+    $vars['reader_initiatives'] = json_encode(reader_get_nid_info(reader_create_entity_array($nd->field_initiative[$nd->language]),'initiatives'));
+    $vars['reader_working_groups'] = json_encode(reader_get_nid_info(reader_create_entity_array($nd->field_working_groups[$nd->language]),'working_groups'));
+    $vars['reader_image'] = file_create_url($nd->field_reader_app_main_image[$nd->language][0]['uri']);
+    $vars['canonicalURL'] = $GLOBALS['base_url'] . $GLOBALS['base_path'] . drupal_get_path_alias('node/' . $nd->nid);
+    $vars['baseURL'] = $GLOBALS['base_url'];
+    $metas = $nd->metatags[$nd->language];
+    $vars['og_image'] = $metas['og:image']['value'] ? $metas['og:image']['value'] : $metas['og:image:url']['value'];
+    $vars['twitter_card'] = $metas['twitter:card']['value'];
+    $vars['twitter_creator'] = $metas['twitter:creator']['value'];
+    $vars['twitter_image'] = $metas['twitter:image']['value'];
+    $vars['description'] = preg_replace( '/\r|\n/', '', strip_tags($nd->body[$nd->language][0]['safe_summary']));
+    $vars['PDFUrl'] = $nd->field_file[$nd->language][0]['fid'] !== null ? file_create_url(file_load($nd->field_file[$nd->language][0]['fid'])->uri) : '';  
+    $vars['reader_date'] = $nd->field_date[$nd->language][0]['value'];
+    $reader_authors = reader_get_author_info(reader_create_entity_array($nd->field_authors[$nd->language]),$nd->language);
+    $vars['reader_author_thumbnails'] = json_encode(reader_get_thumbnails(reader_create_entity_array($nd->field_authors[$nd->language]),$nd->language));
+    $vars['reader_authors'] = json_encode($reader_authors);
+    $vars['reader_authors_text'] = json_encode(strip_tags($reader_authors));
+    $vars['reader_chapter_images'] = addURLToChapterImages($nd);
+    $vars['reader_type'] = reader_get_tid_info(reader_create_entity_array($nd->field_document_type[$nd->language]))[0]->name;
+    $vars['reader_funding'] = json_encode($nd->field_funding_acknowledgment[$nd->language][0]['safe_value']);
+    $vars['reader_summary'] = json_encode(preg_replace( '/\r|\n/', '', $nd->field_reader_print_summary[$nd->language][0]['safe_value']));
+    $vars['show_pdf_link'] = $nd->field_reader_show_pdf_link[$nd->language][0]['value'];
+    $vars['optional_links'] = json_encode($nd->field_reader_optional_links[$nd->language]);
+    $vars['reader_custom_citation'] = json_encode(preg_replace( '/\r|\n/', '', $nd->field_reader_citation[$nd->language][0]['safe_value']));
+    $safeValues = array_map('returnSafeValues', $nd->field_extra_text[$nd->language]);
+    $vars['reader_chapters'] = json_encode($safeValues);
+    $vars['reader_captions'] = json_encode(array_map('returnSafeValues', $nd->field_chapter_image_caption[$nd->language]));
+  } 
+}
+
+function addURLToChapterImages($nd) {
+  $arr = array();
+  foreach ($nd->field_chapter_image[$nd->language] as $imageObj) {
+      $imageObj['url'] = file_create_url($imageObj['uri']);
+      $arr[] = $imageObj;
+    }
+  return json_encode($arr);
+}
+
+function reader_preprocess_page(&$vars) { 
+   
+  $item = menu_get_item();
+  if ($item['path'] == 'reader') {
+    $nd = $GLOBALS['readerNode'];
+    
+    $titleArray = explode(': ', $nd->title);
+    $vars['reader_title'] = $titleArray[0];
+    $vars['reader_subtitle'] = $titleArray[1];
+    $vars['reader_date'] = date('m/d/Y', $nd->created);
+    $vars['reader_authors'] = reader_get_author_info(reader_create_entity_array($nd->field_authors[$nd->language]),$nd->language);
+    $vars['reader_pdf'] = file_create_url(file_load($nd->field_file[$nd->language][0]['fid'])->uri);
+    $vars['reader_type'] = reader_get_tid_info(reader_create_entity_array($nd->field_document_type[$nd->language]))[0]->name;
+    $vars['reader_image'] = file_create_url($nd->field_reader_app_main_image[$nd->language][0]['uri']);
+    $vars['reader_image_title'] = $nd->field_reader_app_main_image[$nd->language][0]['title'];
+
+  }
+}
+
+function reader_create_entity_array($entities){ 
+  $ids = array();
+  if (is_array($entities)) {
+    foreach ($entities as $entity) {  
+      $ids[] = $entity['target_id'] ? $entity['target_id'] : $entity['tid'];
+    }
+  }
+  return $ids;
+}
+
+function reader_get_nid_info($nids, $type){ 
+  $arr = array();   
+  foreach ($nids as $nid) { // field_document_type (document), field_media_type (multimedia), blog_post, event  
+   $ndObj = new StdClass();
+   $nd = node_load($nid);
+   
+   $ndObj->title = $nd->title;
+   $ndObj->type = $nd->type;
+   if ($type === 'relate'){
+    
+      $ndObj->subtype = $nd->type === 'document' && $nd->field_document_type ? taxonomy_term_load($nd->field_document_type[$nd->language][0]['tid'])->name : ($nd->type === 'multimedia' && $nd->field_media_type ? taxonomy_term_load($nd->field_media_type[$nd->language][0]['tid'])->name : 'zz-none');
+      $ndObj->created = date('m/d/Y', $nd->created);
+      $ndObj->authors = reader_get_author_info(reader_create_entity_array($nd->field_authors[$nd->language]),$nd->language);
+      $ndObj->firstAuthorAvatar = reader_get_avatar(reader_create_entity_array($nd->field_authors[$nd->language])[0],$nd->language);
+
+
+    } 
+   $ndObj->url = drupal_get_path_alias('node/' . $nd->nid);
+   if ( $nd->type === 'event' ) {
+      $ndObj->date = date('m/d/Y', strtotime($nd->field_event_date[$nd->language][0]['value']));
+   }
+   $arr[] = $ndObj;
+  }
+  return $arr;
+}
+
+function reader_get_tid_info($tids){  
+  $arr = array();
+  foreach ($tids as $tid) {
+    $taxObj = new StdClass();
+    $tax = taxonomy_term_load($tid);
+    $taxObj->name = $tax->name;
+    $taxObj->url = drupal_get_path_alias('taxonomy/term/' . $tax->tid);
+    $arr[] = $taxObj;
+  }  
+  return $arr;
+}
+
+function reader_get_author_info($tids,$lang){   
+  $authorArray = array();
+  foreach ($tids as $tid) {
+    $t = taxonomy_term_load($tid);
+    if ( sizeof($t->field_author_link[$lang]) > 0 ) {
+      $str = '<a href="' . $t->field_author_link[$lang][0]['url'] . '">' . $t->name . '</a>';
+    } else {
+      $str = $t->name;
+    }
+    $authorArray[] = $str;
+  }
+  return reader_authors_to_string($authorArray);
+}
+
+function reader_get_thumbnails($tids,$lang){
+  $thumbArray = array();
+  foreach ($tids as $tid) {
+    $t = taxonomy_term_load($tid);
+    $obj = new StdClass();
+    $obj->name = $t->name;
+    $obj->link = $t->field_author_link[$lang][0]['url'];
+    $obj->image = ( sizeof($t->field_avatar[$lang]) > 0 ) ? image_style_url('thumbnail',$t->field_avatar[$lang][0]['uri']) : null;
+    $thumbArray[] = $obj;
+  }
+  return $thumbArray;
+}
+
+function reader_get_avatar($tid, $lang) {
+  $t = taxonomy_term_load($tid);
+  if ( sizeof($t->field_avatar[$lang]) > 0 ) {
+    return image_style_url('small_avatar',$t->field_avatar[$lang][0]['uri']);
+  }
+
+}
+
+function reader_authors_to_string($array){ 
+  
+  $authorStr = '';
+  $x = sizeof($array);
+  
+  for ($i = 0; $i < $x; $i++){ // insert commas, ands, spaces, according to index and number of authors
+    $authorStr .= $array[$i];
+    $authorStr .= $x === 2 && $i === 0 ? ' and ' : ( $x > 2 && $i ===  $x - 2 ? ', and ' : ( $x === 1 || $i === $x - 1 ? '' : ', ')); // : $x > 2 && $i == $x - 2 ? ', and ' : $x == 1 || $i == x - 1 ? '' : ', ';  
+
+  }
+  return $authorStr;
+}
