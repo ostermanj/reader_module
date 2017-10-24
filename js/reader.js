@@ -191,9 +191,9 @@ app.controller('MainController',['$scope', '$routeParams', '$location', '$sce', 
     };
 
 	$scope.setTopSocials = function(){ 
-		$scope.tweetIntent = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent($('#pub-title').text()) + '&url=' + encodeURIComponent($location.absUrl()) + '&via=cgdev';
+		$scope.tweetIntent = 'https://twitter.com/intent/tweet?text=' + encodeURIComponent($scope.fullTitle) + '&url=' + encodeURIComponent($location.absUrl()) + '&via=cgdev';
 		$scope.facebookSharer = 'https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent($location.absUrl());
-		$scope.linkedInSharer = 'https://www.linkedin.com/shareArticle?mini=true&url=' + encodeURIComponent($location.absUrl()) + '&title=' + encodeURIComponent($('#pub-title').text()) + '&source=Center%20for%20Global%20Development';
+		$scope.linkedInSharer = 'https://www.linkedin.com/shareArticle?mini=true&url=' + encodeURIComponent($location.absUrl()) + '&title=' + encodeURIComponent($scope.fullTitle) + '&source=Center%20for%20Global%20Development';
 		var topTweet = $('#share-top .tweet');
 		topTweet[0].onclick = function(){window.open($scope.tweetIntent, 'newwindow', 'width=550, height=420'); return false;};
 		var topFacebook = $('#share-top .facebook');
