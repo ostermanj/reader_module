@@ -86,11 +86,11 @@ module.exports = function(grunt){
     		}
 		},
 		cssmin: {
-    		build: {
+    		target: {
         		files: [{
 				  expand: true,
 				  cwd: 'css',
-				  src: ['css/prefixed/*.css', '!*.min.css'],
+				  src: ['*.css', '!*.min.css'],
 				  dest: 'css/min',
 				  ext: '.min.css'
 				}]

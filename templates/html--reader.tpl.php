@@ -34,7 +34,7 @@
   <!-- END PRINT STYLES -->
   <!-- UPDATE before deployment -->
   <link rel="stylesheet" href="<?php print $reader_path ?>/css/share-this.css" />
-  <link rel="stylesheet" href="<?php print $reader_path ?>/css/reader.css" />
+  <link rel="stylesheet" href="<?php print $reader_path ?>/css/reader.min.css" />
   <link href="https://plus.google.com/103088068689493599225" rel="publisher" />
   <!-- PRINT SCRIPTS -->
   <?php print $scripts; ?>
@@ -47,7 +47,7 @@
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-route.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.8/angular-sanitize.min.js"></script>
   <script src="<?php print $reader_path ?>/js/share-this.min.js"></script>
-  <script src="<?php print $reader_path ?>/js/reader.js"></script>
+  <script src="<?php print $reader_path ?>/js/reader.min.js"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
     window.readerApp = {

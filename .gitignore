@@ -7,4 +7,5 @@ html-old/
 css/
 *.css
 *.css.map
+*.min.js
 ChromePhp.php
